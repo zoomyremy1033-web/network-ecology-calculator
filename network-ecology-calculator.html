@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Network Ecology of Information — Risk Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#fafaf8;--surface:#ffffff;--surface2:#f2f1ed;--surface3:#e8e7e2;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
+  --text:#1a1916;--text2:#5c5a54;--text3:#9c9a94;
+  --blue:#185fa5;--blue-bg:#e6f1fb;
+  --red:#a32d2d;--red-bg:#fcebeb;--red-mid:#c45c5c;
+  --amber:#854f0b;--amber-bg:#faeeda;--amber-mid:#c49a3c;
+  --green:#0f6e56;--green-bg:#e1f5ee;--green-mid:#1D9E75;
+  --purple:#534ab7;--purple-bg:#eeedfe;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --r:5px;--rl:10px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0e0f0d;--surface:#181916;--surface2:#1e1f1c;--surface3:#252622;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+    --text:#e8e6df;--text2:#9c9a94;--text3:#5c5a54;
+    --blue-bg:#042c53;--red-bg:#501313;--amber-bg:#412402;
+    --green-bg:#04342c;--purple-bg:#26215c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+
+.topbar{border-bottom:1px solid var(--border2);padding:14px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:var(--surface)}
+.brand{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px}
+.title{font-size:17px;font-weight:500;color:var(--text)}
+.subtitle{font-size:12px;color:var(--text2);margin-top:2px;max-width:560px}
+.links{display:flex;gap:1.5rem;align-items:center;flex-shrink:0}
+.links a{font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;letter-spacing:0.05em;text-transform:uppercase}
+.links a:hover{color:var(--blue)}
+
+.main{max-width:1080px;margin:0 auto;padding:1.5rem}
+
+.tab-bar{display:flex;border-bottom:1px solid var(--border2);margin-bottom:1.5rem;overflow-x:auto}
+.tab{font-family:var(--sans);font-size:13px;padding:9px 16px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500}
+
+.pane{display:none}.pane.active{display:block}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.card-flat{background:var(--surface2);border-radius:var(--r);padding:1rem;margin-bottom:1rem}
+.section-head{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:600px){.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+
+.metric{background:var(--surface2);border-radius:var(--r);padding:1rem;text-align:center}
+.metric-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+.metric-val{font-family:var(--mono);font-size:22px;font-weight:300;color:var(--text);line-height:1}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:4px}
+
+.badge{font-family:var(--mono);font-size:10px;padding:2px 9px;border-radius:3px;letter-spacing:0.03em;display:inline-block}
+.b-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red)}
+.b-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber)}
+.b-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green)}
+.b-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue)}
+.b-neutral{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
+.b-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple)}
+
+input,select{font-size:12px;font-family:var(--mono);padding:7px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);width:100%}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+select option{background:var(--surface)}
+
+button{font-family:var(--mono);font-size:11px;letter-spacing:0.03em;padding:8px 16px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.12s}
+button:hover{background:var(--surface2);color:var(--text)}
+button.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
+button.primary:hover{opacity:0.85}
+button.sm{padding:3px 9px;font-size:10px}
+button.danger{color:var(--red);border-color:rgba(163,45,45,0.3)}
+button.danger:hover{background:var(--red-bg)}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{font-family:var(--mono);font-size:9px;color:var(--text3);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border2);letter-spacing:0.07em;text-transform:uppercase;font-weight:400}
+td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+td.mono{font-family:var(--mono);font-size:11px}
+
+.drop{border:1px dashed var(--border2);border-radius:var(--rl);padding:1.25rem;text-align:center;cursor:pointer;color:var(--text3);font-family:var(--mono);font-size:10px;letter-spacing:0.05em;transition:all 0.15s}
+.drop:hover{border-color:var(--blue);color:var(--text2);background:var(--surface2)}
+
+.ig-actors{display:grid;grid-template-columns:2fr 1.5fr 1.8fr 1fr auto;gap:6px;align-items:center;margin-bottom:5px}
+.ig-obs{display:grid;grid-template-columns:1.5fr 1.5fr 1.5fr 0.8fr auto;gap:6px;align-items:center;margin-bottom:5px}
+.col-h{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;padding:0 2px}
+.row-sep{border-bottom:1px solid var(--border);padding:4px 0}
+
+.verdict-box{padding:12px 16px;border-radius:var(--r);margin-bottom:1rem;border:1px solid}
+.v-red{border-color:var(--red);background:var(--red-bg)}
+.v-amber{border-color:var(--amber);background:var(--amber-bg)}
+.v-green{border-color:var(--green);background:var(--green-bg)}
+.v-blue{border-color:var(--blue);background:var(--blue-bg)}
+.v-neutral{border-color:var(--border);background:var(--surface2)}
+
+.pbar-track{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;flex:1;min-width:60px}
+.pbar-fill{height:100%;border-radius:2px;transition:width 0.5s}
+
+.formula{font-family:var(--mono);font-size:12px;color:var(--text);background:var(--surface2);padding:10px 14px;border-left:2px solid var(--blue);margin:8px 0}
+
+.weight-pill{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+
+#graph-svg{width:100%;display:block}
+.graph-wrap{border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;background:var(--surface2)}
+
+.footer{border-top:1px solid var(--border);padding:1rem 1.5rem;font-family:var(--mono);font-size:9px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;letter-spacing:0.04em;margin-top:2rem}
+.footer a{color:var(--text3);text-decoration:none}
+.footer a:hover{color:var(--blue)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Online Journalism Review · Supplementary Calculator</div>
+    <div class="title">Network Ecology of Information — Risk Calculator</div>
+    <div class="subtitle">Enter your observed media network interactions and content verification status to compute structural risk scores and dual-layer intervention recommendations. Implements the 5-Dimensional Risk Assessment Model exactly as specified in the paper.</div>
+  </div>
+  <div class="links">
+    <a href="https://osf.io/f5trp/" target="_blank">OSF Archive</a>
+    <a href="https://zoomyremy1033-web.github.io/network-ecology-figures/" target="_blank">Original figures</a>
+  </div>
+</div>
+
+<div class="main">
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showPane('input')">Network input</button>
+  <button class="tab" onclick="showPane('graph')">Network graph</button>
+  <button class="tab" onclick="showPane('results')">Risk results</button>
+  <button class="tab" onclick="showPane('intervention')">Intervention</button>
+  <button class="tab" onclick="showPane('methodology')">Methodology</button>
+</div>
+
+<!-- INPUT PANE -->
+<div class="pane active" id="pane-input">
+
+  <div class="card-flat" style="margin-bottom:1rem;font-size:12px;color:var(--text2);line-height:1.7">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">How to use — </span>
+    Step 1: Add actors (nodes) with their type and content verification status — what are they currently amplifying? Step 2: Add observed interactions (edges) — who mentioned, retweeted, quoted, or linked to whom, and how many times? Step 3: Compute risk scores. Or load the paper's illustrative example to explore first.
+  </div>
+
+  <div class="section-head">Actors (nodes)</div>
+  <div class="card" style="padding:1rem">
+    <div class="ig-actors" style="margin-bottom:8px">
+      <span class="col-h">Name</span>
+      <span class="col-h">Type</span>
+      <span class="col-h">Content status</span>
+      <span class="col-h">Count</span>
+      <span></span>
+    </div>
+    <div id="actor-list"></div>
+    <div class="ig-actors" style="margin-top:10px">
+      <input id="a-name" placeholder="e.g. Influencer B"/>
+      <select id="a-type">
+        <option value="outlet">News outlet</option>
+        <option value="journalist">Journalist</option>
+        <option value="influencer">Social influencer</option>
+        <option value="bot">Automated account</option>
+        <option value="community">Community</option>
+        <option value="broadcast">Broadcast / radio</option>
+      </select>
+      <select id="a-content">
+        <option value="Verified">Verified</option>
+        <option value="Contested">Contested</option>
+        <option value="Unverified">Unverified</option>
+        <option value="Satire">Satire</option>
+        <option value="Procedural">Procedural</option>
+      </select>
+      <input id="a-count" type="number" min="1" value="1" placeholder="audience" title="Approximate audience size (optional, used for display only)"/>
+      <button onclick="addActor()">+ Add</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:8px">Content status = what this actor is currently amplifying, as observed by journalist</div>
+  </div>
+
+  <div class="section-head">Observed interactions (edges)</div>
+  <div class="card" style="padding:1rem">
+    <div class="ig-obs" style="margin-bottom:8px">
+      <span class="col-h">Source</span>
+      <span class="col-h">Target</span>
+      <span class="col-h">Interaction type</span>
+      <span class="col-h">Count</span>
+      <span></span>
+    </div>
+    <div id="obs-list"></div>
+    <div class="ig-obs" style="margin-top:10px">
+      <select id="o-from"><option value="">Source actor</option></select>
+      <select id="o-to"><option value="">Target actor</option></select>
+      <select id="o-type">
+        <option value="1">Mention (weight 1)</option>
+        <option value="2">Retweet / Repost (weight 2)</option>
+        <option value="3">Quote / Commentary (weight 3)</option>
+        <option value="4">Hyperlink reference (weight 4)</option>
+      </select>
+      <input id="o-count" type="number" min="1" value="1" placeholder="count"/>
+      <button onclick="addObs()">+ Add</button>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:8px">Interaction weights: Mention=1 · Retweet=2 · Quote=3 · Hyperlink=4 · Count = observed frequency</div>
+  </div>
+
+  <div class="section-head">CSV upload</div>
+  <div class="g2" style="margin-bottom:1rem">
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:6px;letter-spacing:0.07em;text-transform:uppercase">Actors CSV · name, type, content_status</div>
+      <div class="drop" onclick="document.getElementById('csv-actors').click()" id="drop-actors">drop actors.csv or click</div>
+      <input type="file" id="csv-actors" accept=".csv" style="display:none" onchange="parseActorCSV(this)"/>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:6px;letter-spacing:0.07em;text-transform:uppercase">Interactions CSV · source, target, type, count</div>
+      <div class="drop" onclick="document.getElementById('csv-obs').click()" id="drop-obs">drop interactions.csv or click</div>
+      <input type="file" id="csv-obs" accept=".csv" style="display:none" onchange="parseObsCSV(this)"/>
+    </div>
+  </div>
+  <div class="card-flat" style="margin-bottom:1.5rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);line-height:2">
+        actors.csv<br>
+        name,type,content_status<br>
+        <span style="color:var(--text2)">Influencer B,influencer,Unverified</span><br>
+        <span style="color:var(--text2)">News Site A,outlet,Verified</span><br>
+        <span style="color:var(--text2)">Bot C,bot,Contested</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);line-height:2">
+        interactions.csv<br>
+        source,target,type,count<br>
+        <span style="color:var(--text2)">Influencer B,Community E,retweet,18</span><br>
+        <span style="color:var(--text2)">Bot C,Community E,retweet,22</span><br>
+        <span style="color:var(--text2)">Journalist D,Community E,hyperlink,4</span>
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:8px">Type values: mention, retweet, quote, hyperlink (or 1,2,3,4)</div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="primary" onclick="computeAll()">▶ Compute risk scores</button>
+    <button onclick="loadExample()">Load paper example</button>
+    <button onclick="exportCSV()">↓ Export CSV</button>
+    <button onclick="clearAll()" class="danger">✕ Clear</button>
+  </div>
+</div>
+
+<!-- GRAPH PANE -->
+<div class="pane" id="pane-graph">
+  <div style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3)">node size = eigenvector centrality · colour = risk tier · edge thickness = amplification weight · drag to explore</div>
+    <button class="sm" onclick="restartSim()" style="margin-left:auto">⟳ Re-layout</button>
+  </div>
+  <div id="graph-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red-mid);display:inline-block"></span>High risk</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber-mid);display:inline-block"></span>Medium risk</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green-mid);display:inline-block"></span>Low risk</span>
+  </div>
+  <div class="graph-wrap"><svg id="graph-svg"></svg></div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:6px">Compute risk scores first to enable centrality-weighted node sizing. Red outline = Red Alert node (high structural risk + unverified content).</div>
+</div>
+
+<!-- RESULTS PANE -->
+<div class="pane" id="pane-results">
+  <div id="res-empty" style="padding:3rem 0;font-family:var(--mono);font-size:11px;color:var(--text3)">Enter network data and compute risk scores to see results.</div>
+  <div id="res-content" style="display:none">
+    <div class="section-head">Structural risk scores — Layer 1 (content-neutral)</div>
+    <div class="formula">Risk Score = 0.4 × Eigenvector + 0.3 × Weighted Degree + 0.3 × Betweenness</div>
+    <div class="card" style="padding:0;overflow-x:auto;margin-bottom:1.5rem">
+      <table>
+        <thead><tr>
+          <th>Actor</th><th>Type</th><th>Wtd degree</th><th>Betweenness</th>
+          <th>Closeness</th><th>Eigenvector</th><th>Risk score</th><th>Risk tier</th>
+        </tr></thead>
+        <tbody id="res-table"></tbody>
+      </table>
+    </div>
+
+    <div class="section-head">Dual-layer assessment — Layer 2 (structural risk × content status)</div>
+    <div class="card" style="padding:0;overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Actor</th><th>Structural risk</th><th>Content status</th>
+          <th>Intervention priority</th><th>Recommended action</th>
+        </tr></thead>
+        <tbody id="dual-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- INTERVENTION PANE -->
+<div class="pane" id="pane-intervention">
+  <div id="int-empty" style="padding:3rem 0;font-family:var(--mono);font-size:11px;color:var(--text3)">Compute risk scores first to generate intervention recommendations.</div>
+  <div id="int-content" style="display:none">
+    <div class="section-head">Intervention summary</div>
+    <div id="int-alerts"></div>
+    <div class="section-head" style="margin-top:1.5rem">Network health indicators</div>
+    <div class="g4" id="int-metrics"></div>
+    <div class="section-head" style="margin-top:1.5rem">The dual-layer principle</div>
+    <div class="card-flat" style="font-size:12px;color:var(--text2);line-height:1.7">
+      <strong style="color:var(--text)">High amplification of verified content = positive signal.</strong> The network is functioning correctly. No intervention needed even if structural risk is high.<br><br>
+      <strong style="color:var(--text)">High amplification of unverified content = cascade risk.</strong> The same structurally powerful node is the problem. Immediate friction, down-ranking, context injection.<br><br>
+      Structural risk tier and content status are computed independently. Their intersection — not any single metric — determines intervention priority. This preserves analytical neutrality: risk tiers make no claims about actor intent, content accuracy, or political orientation.
+    </div>
+  </div>
+</div>
+
+<!-- METHODOLOGY PANE -->
+<div class="pane" id="pane-methodology">
+  <div class="card-flat" style="margin-bottom:1.5rem;font-size:12px;color:var(--text2);line-height:1.7;border-left:2px solid var(--blue)">
+    <strong style="color:var(--text);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em">Implementation note — edge weights</strong><br>
+    This calculator uses <span style="font-family:var(--mono);font-size:11px">rawWeight = interaction_type_weight × count</span> — capturing both the type of interaction (mention=1 through hyperlink=4) and its observed frequency. This is the richer implementation for real-world media networks where a single actor may retweet another 50 times. The illustrative Table 2 values in the paper (e.g. degree(w)=4.75 for Influencer B) use a simplified edge-weight representation for expository clarity. The risk formula, centrality measures, content verification categories, and decision matrix are implemented exactly as specified in the paper.
+  </div>
+  <div class="section-head">Interaction weights (Section 3)</div>
+  <div class="card" style="padding:0;overflow-x:auto;margin-bottom:1.5rem">
+    <table>
+      <thead><tr><th>Interaction type</th><th>Transmission analogue</th><th>Weight</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Mention</td><td>Passive exposure</td><td><span class="weight-pill">1</span></td><td style="font-size:11px;color:var(--text2)">Weakest transmission — actor noted but not endorsed</td></tr>
+        <tr><td>Retweet / Repost</td><td>Direct transmission</td><td><span class="weight-pill">2</span></td><td style="font-size:11px;color:var(--text2)">Unmediated amplification — content passed on without commentary</td></tr>
+        <tr><td>Quote / Commentary</td><td>Amplified transmission</td><td><span class="weight-pill">3</span></td><td style="font-size:11px;color:var(--text2)">Active engagement — adds authority and extends reach</td></tr>
+        <tr><td>Hyperlink reference</td><td>Persistent pathway</td><td><span class="weight-pill">4</span></td><td style="font-size:11px;color:var(--text2)">Strongest — creates durable, indexed connection between nodes</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-head">Centrality measures (Section 4)</div>
+  <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
+    <div class="card-flat">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Weighted degree centrality — superspreader potential</div>
+      <div class="formula">C_D(v) = Σ w_vu / (N − 1)</div>
+      <div style="font-size:11px;color:var(--text2)">Raw amplification capacity. Most sensitive to friction-based interventions. Separates broadcast hubs from local amplifiers.</div>
+    </div>
+    <div class="card-flat">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Betweenness centrality — transmission vector</div>
+      <div class="formula">C_B(v) = Σ σ_st(v) / σ_st</div>
+      <div style="font-size:11px;color:var(--text2)">Identifies actors on shortest paths between communities — determines which narrative version reaches which population.</div>
+    </div>
+    <div class="card-flat">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Directed closeness centrality — reach potential</div>
+      <div class="formula">C_C(v) = (N − 1) / Σ d(v,t)</div>
+      <div style="font-size:11px;color:var(--text2)">How efficiently a node can reach the full network. Identifies epidemic threshold position.</div>
+    </div>
+    <div class="card-flat">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Weighted eigenvector centrality — cascade amplifier</div>
+      <div class="formula">A^(w) · C_E = λ · C_E</div>
+      <div style="font-size:11px;color:var(--text2)">Captures cascade potential through connection to other high-influence nodes. Primary mechanism behind credibility laundering.</div>
+    </div>
+  </div>
+
+  <div class="section-head">Content verification categories (Section 8)</div>
+  <div class="card" style="padding:0;overflow-x:auto;margin-bottom:1.5rem">
+    <table>
+      <thead><tr><th>Category</th><th>Definition</th><th>Intervention implication</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge b-green">Verified</span></td><td style="font-size:11px;color:var(--text2)">Independently confirmed by two or more credible sources</td><td style="font-size:11px;color:var(--text2)">No intervention needed — network functioning correctly</td></tr>
+        <tr><td><span class="badge b-amber">Contested</span></td><td style="font-size:11px;color:var(--text2)">Active factual dispute among credible sources</td><td style="font-size:11px;color:var(--text2)">Monitor — watch for cascade amplification</td></tr>
+        <tr><td><span class="badge b-red">Unverified</span></td><td style="font-size:11px;color:var(--text2)">Single source, no independent confirmation yet</td><td style="font-size:11px;color:var(--text2)">High priority — apply friction and context injection</td></tr>
+        <tr><td><span class="badge b-neutral">Satire</span></td><td style="font-size:11px;color:var(--text2)">Clearly labeled opinion or satirical content</td><td style="font-size:11px;color:var(--text2)">Context labeling only</td></tr>
+        <tr><td><span class="badge b-blue">Procedural</span></td><td style="font-size:11px;color:var(--text2)">Official statements, institutional communications</td><td style="font-size:11px;color:var(--text2)">Routine — standard verification protocols</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-head">Decision matrix (Section 8)</div>
+  <div class="card" style="padding:0;overflow-x:auto">
+    <table>
+      <thead><tr><th>Structural risk</th><th>Content status</th><th>Priority</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge b-red">High</span></td><td><span class="badge b-red">Unverified</span></td><td><span class="badge b-red">RED ALERT</span></td><td style="font-size:11px;color:var(--text2)">Immediate friction, down-ranking, context injection</td></tr>
+        <tr><td><span class="badge b-red">High</span></td><td><span class="badge b-amber">Contested</span></td><td><span class="badge b-amber">MONITOR</span></td><td style="font-size:11px;color:var(--text2)">Watch closely, route diversification, counter-signals</td></tr>
+        <tr><td><span class="badge b-red">High</span></td><td><span class="badge b-green">Verified</span></td><td><span class="badge b-green">POSITIVE SIGNAL</span></td><td style="font-size:11px;color:var(--text2)">No intervention — network working correctly</td></tr>
+        <tr><td><span class="badge b-amber">Medium</span></td><td><span class="badge b-red">Unverified</span></td><td><span class="badge b-amber">WATCH</span></td><td style="font-size:11px;color:var(--text2)">Monitor, light friction</td></tr>
+        <tr><td><span class="badge b-green">Low</span></td><td>Any</td><td><span class="badge b-neutral">NEUTRAL</span></td><td style="font-size:11px;color:var(--text2)">No action required</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <span>Network Ecology of Information · 5D Risk Assessment Model · Yip, J. (2026) · Online Journalism Review</span>
+  <span>OSF: <a href="https://osf.io/f5trp/" target="_blank">osf.io/f5trp</a> &nbsp;·&nbsp; Figures: <a href="https://zoomyremy1033-web.github.io/network-ecology-figures/" target="_blank">github.io</a> &nbsp;·&nbsp; D3.js v7</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const TYPE_COLORS={outlet:'#185fa5',journalist:'#1D9E75',influencer:'#c45c5c',bot:'#c49a3c',community:'#7F77DD',broadcast:'#D85A30'};
+const TYPE_LABELS={outlet:'News outlet',journalist:'Journalist',influencer:'Social influencer',bot:'Automated account',community:'Community',broadcast:'Broadcast/radio'};
+const CONTENT_WEIGHT={Verified:0,Contested:1,Unverified:2,Satire:0,Procedural:0};
+
+let actors=[],observations=[],lastResults=null,simulation=null;
+
+function showPane(id){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active',['input','graph','results','intervention','methodology'][i]===id);
+  });
+  document.getElementById('pane-'+id).classList.add('active');
+  if(id==='graph') setTimeout(drawGraph,50);
+}
+
+function refreshSelects(){
+  ['o-from','o-to'].forEach(id=>{
+    const s=document.getElementById(id),cur=s.value;
+    s.innerHTML='<option value="">Select actor</option>'+actors.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+    if(cur) s.value=cur;
+  });
+}
+
+function addActor(){
+  const name=document.getElementById('a-name').value.trim();
+  if(!name) return;
+  actors.push({
+    id:'a'+Date.now()+Math.random(),
+    name,
+    type:document.getElementById('a-type').value,
+    content:document.getElementById('a-content').value,
+    count:parseInt(document.getElementById('a-count').value)||1
+  });
+  document.getElementById('a-name').value='';
+  renderActors();refreshSelects();
+}
+
+function removeActor(id){
+  actors=actors.filter(a=>a.id!==id);
+  observations=observations.filter(o=>o.from!==id&&o.to!==id);
+  renderActors();renderObs();refreshSelects();
+}
+
+function renderActors(){
+  document.getElementById('actor-list').innerHTML=actors.map(a=>`
+    <div class="ig-actors row-sep" style="align-items:center">
+      <span style="font-family:var(--mono);font-size:12px">${a.name}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${TYPE_LABELS[a.type]||a.type}</span>
+      <span>${contentBadge(a.content)}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${a.count}</span>
+      <button class="sm danger" onclick="removeActor('${a.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addObs(){
+  const from=document.getElementById('o-from').value,to=document.getElementById('o-to').value;
+  if(!from||!to||from===to) return;
+  const w=parseInt(document.getElementById('o-type').value)||1;
+  const count=parseInt(document.getElementById('o-count').value)||1;
+  observations.push({from,to,weight:w,count,rawWeight:w*count});
+  renderObs();
+}
+
+function removeObs(i){observations.splice(i,1);renderObs();}
+
+const OBS_LABELS={1:'Mention',2:'Retweet',3:'Quote',4:'Hyperlink'};
+function renderObs(){
+  const nn=id=>(actors.find(a=>a.id===id)||{name:id}).name;
+  document.getElementById('obs-list').innerHTML=observations.map((o,i)=>`
+    <div class="ig-obs row-sep" style="align-items:center">
+      <span style="font-family:var(--mono);font-size:11px">${nn(o.from)}</span>
+      <span style="font-family:var(--mono);font-size:11px">${nn(o.to)}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${OBS_LABELS[o.weight]||o.weight} ×${o.count}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">w=${o.rawWeight}</span>
+      <button class="sm danger" onclick="removeObs(${i})">✕</button>
+    </div>`).join('');
+}
+
+function contentBadge(c){
+  const map={Verified:'b-green',Contested:'b-amber',Unverified:'b-red',Satire:'b-neutral',Procedural:'b-blue'};
+  return`<span class="badge ${map[c]||'b-neutral'}">${c}</span>`;
+}
+
+function riskBadge(t){
+  const map={High:'b-red',Medium:'b-amber',Low:'b-green'};
+  return`<span class="badge ${map[t]||'b-neutral'}">${t.toUpperCase()}</span>`;
+}
+
+function parseCSVLine(line){
+  const r=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(ch===','&&!inQ){r.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  r.push(cur.trim());return r;
+}
+
+function parseActorCSV(input){
+  const file=input.files[0];if(!file) return;
+  if(actors.length>0&&!confirm('This will ADD to your existing actors. Continue?')) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const raw=e.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    const lines=raw.trim().split('\n');
+    const h=parseCSVLine(lines[0]).map(s=>s.toLowerCase().trim());
+    const ni=h.indexOf('name'),ti=h.indexOf('type'),ci=h.findIndex(x=>x.includes('content')||x.includes('status'));
+    if(ni<0){alert('CSV must have a "name" column.\nFound: '+h.join(', '));return;}
+    let added=0,skipped=[];
+    lines.slice(1).forEach((line,idx)=>{
+      if(!line.trim()) return;
+      const c=parseCSVLine(line);
+      const name=c[ni]||'';if(!name) return;
+      const type=c[ti]||'outlet';
+      const rawContent=c[ci]||'Unverified';
+      const validContent=['Verified','Contested','Unverified','Satire','Procedural'];
+      const content=validContent.find(v=>v.toLowerCase()===rawContent.toLowerCase())||'Unverified';
+      actors.push({id:'a'+Date.now()+Math.random(),name,type,content,count:1});
+      added++;
+    });
+    renderActors();refreshSelects();
+    document.getElementById('drop-actors').textContent=file.name+' — '+added+' actors loaded';
+  };r.readAsText(file);
+}
+
+function parseObsCSV(input){
+  const file=input.files[0];if(!file) return;
+  if(actors.length===0){alert('Upload actors.csv first — interactions need actors to match against.');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    const raw=e.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    const lines=raw.trim().split('\n');
+    const h=parseCSVLine(lines[0]).map(s=>s.toLowerCase().trim());
+    const si=h.findIndex(x=>x.includes('source')||x==='from');
+    const ti=h.findIndex(x=>x.includes('target')||x==='to');
+    const tyi=h.findIndex(x=>x.includes('type')||x.includes('interaction'));
+    const ci=h.findIndex(x=>x.includes('count')||x.includes('freq'));
+    if(si<0||ti<0){alert('CSV must have "source" and "target" columns.\nFound: '+h.join(', '));return;}
+    const typeMap={mention:1,retweet:2,repost:2,quote:3,commentary:3,hyperlink:4,link:4,'1':1,'2':2,'3':3,'4':4};
+    let added=0,skipped=[];
+    lines.slice(1).forEach((line,idx)=>{
+      if(!line.trim()) return;
+      const c=parseCSVLine(line);
+      const sName=(c[si]||'').toLowerCase().trim();
+      const tName=(c[ti]||'').toLowerCase().trim();
+      const fn=actors.find(a=>a.name.toLowerCase()===sName);
+      const tn=actors.find(a=>a.name.toLowerCase()===tName);
+      if(!fn||!tn){
+        skipped.push('Row '+(idx+2)+': "'+c[si]+'" → "'+c[ti]+'"'+(fn?'':' [source not found]')+(tn?'':' [target not found]'));
+        return;
+      }
+      const rawType=(c[tyi]||'mention').toLowerCase().trim();
+      const w=typeMap[rawType]||1;
+      const count=parseInt(c[ci])||1;
+      observations.push({from:fn.id,to:tn.id,weight:w,count,rawWeight:w*count});
+      added++;
+    });
+    renderObs();
+    let msg=file.name+' — '+added+' interactions loaded';
+    if(skipped.length>0){
+      msg+=' ('+skipped.length+' skipped)';
+      alert('Loaded '+added+' interactions.\n\n'+skipped.length+' were skipped:\n'+skipped.slice(0,10).join('\n')+(skipped.length>10?'\n...and '+(skipped.length-10)+' more':''));
+    }
+    document.getElementById('drop-obs').textContent=msg;
+  };r.readAsText(file);
+}
+
+function exportCSV(){
+  const nn=id=>(actors.find(a=>a.id===id)||{name:id}).name;
+  const acsv='name,type,content_status\n'+actors.map(a=>`${a.name},${a.type},${a.content}`).join('\n');
+  const ocsv='source,target,type,count\n'+observations.map(o=>`${nn(o.from)},${nn(o.to)},${OBS_LABELS[o.weight]||o.weight},${o.count}`).join('\n');
+  [['ne-actors.csv',acsv],['ne-interactions.csv',ocsv]].forEach(([fn,d])=>{
+    const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(d);a.download=fn;a.click();
+  });
+}
+
+function loadExample(){
+  clearAll();
+  actors=[
+    {id:'aA',name:'News Site A',type:'outlet',content:'Verified',count:1},
+    {id:'aB',name:'Influencer B',type:'influencer',content:'Unverified',count:1},
+    {id:'aC',name:'Bot C',type:'bot',content:'Unverified',count:1},
+    {id:'aD',name:'Journalist D',type:'journalist',content:'Verified',count:1},
+    {id:'aE',name:'Community E',type:'community',content:'Unverified',count:1},
+  ];
+  observations=[
+    {from:'aA',to:'aB',weight:1,count:3,rawWeight:3},
+    {from:'aB',to:'aE',weight:2,count:18,rawWeight:36},
+    {from:'aC',to:'aE',weight:2,count:22,rawWeight:44},
+    {from:'aD',to:'aE',weight:4,count:4,rawWeight:16},
+    {from:'aB',to:'aD',weight:1,count:1,rawWeight:1},
+    {from:'aA',to:'aD',weight:1,count:1,rawWeight:1},
+    {from:'aA',to:'aE',weight:1,count:1,rawWeight:1},
+  ];
+  renderActors();renderObs();refreshSelects();
+  setTimeout(computeAll,100);
+}
+
+function clearAll(){
+  actors=[];observations=[];lastResults=null;
+  renderActors();renderObs();refreshSelects();
+  document.getElementById('res-empty').style.display='block';
+  document.getElementById('res-content').style.display='none';
+  document.getElementById('int-empty').style.display='block';
+  document.getElementById('int-content').style.display='none';
+}
+
+// ── CALCULATIONS ─────────────────────────────────────────────────────────────
+function computeMetrics(){
+  const N=actors.length;
+  const idx={};actors.forEach((a,i)=>idx[a.id]=i);
+
+  // weighted degree (sum of rawWeights)
+  const wdeg=new Array(N).fill(0);
+  observations.forEach(o=>{
+    const i=idx[o.from],j=idx[o.to];
+    if(i!=null&&j!=null){wdeg[i]+=o.rawWeight;wdeg[j]+=o.rawWeight;}
+  });
+  const wdeg_n=wdeg.map(d=>d/((N-1)||1));
+
+  // betweenness (BFS, unweighted paths)
+  const between=new Array(N).fill(0);
+  for(let s=0;s<N;s++){
+    const stack=[],pred=Array.from({length:N},()=>[]);
+    const sigma=new Array(N).fill(0);sigma[s]=1;
+    const dist=new Array(N).fill(-1);dist[s]=0;
+    const queue=[s];
+    while(queue.length){
+      const v=queue.shift();stack.push(v);
+      observations.forEach(o=>{
+        const i=idx[o.from],j=idx[o.to];
+        if(i==null||j==null) return;
+        const w=i===v?j:j===v?i:-1;if(w<0) return;
+        if(dist[w]<0){dist[w]=dist[v]+1;queue.push(w);}
+        if(dist[w]===dist[v]+1){sigma[w]+=sigma[v];pred[w].push(v);}
+      });
+    }
+    const delta=new Array(N).fill(0);
+    while(stack.length){const w=stack.pop();pred[w].forEach(v=>{delta[v]+=(sigma[v]/sigma[w])*(1+delta[w]);});if(w!==s) between[w]+=delta[w];}
+  }
+  const denom=(N-1)*(N-2)||1;
+  const between_n=between.map(b=>b/denom);
+
+  // closeness
+  const close=actors.map((_,s)=>{
+    const dist=new Array(N).fill(Infinity);dist[s]=0;const queue=[s];
+    while(queue.length){
+      const v=queue.shift();
+      observations.forEach(o=>{
+        const i=idx[o.from],j=idx[o.to];if(i==null||j==null) return;
+        const w=i===v?j:j===v?i:-1;
+        if(w>=0&&dist[w]===Infinity){dist[w]=dist[v]+1;queue.push(w);}
+      });
+    }
+    const reach=dist.filter(d=>d<Infinity&&d>0);
+    return reach.length?(N-1)/dist.reduce((a,b)=>a+(b<Infinity?b:N),0):0;
+  });
+
+  // eigenvector
+  let ev=new Array(N).fill(1/N);
+  for(let it=0;it<60;it++){
+    const nev=new Array(N).fill(0);
+    observations.forEach(o=>{
+      const i=idx[o.from],j=idx[o.to];
+      if(i!=null&&j!=null){nev[i]+=o.rawWeight*ev[j];nev[j]+=o.rawWeight*ev[i];}
+    });
+    const norm=Math.sqrt(nev.reduce((a,b)=>a+b*b,0))||1;
+    ev=nev.map(x=>x/norm);
+  }
+  const ev_max=Math.max(...ev)||1;
+  const ev_n=ev.map(x=>x/ev_max);
+
+  // risk scores
+  const scores=actors.map((_,i)=>0.4*ev_n[i]+0.3*wdeg_n[i]+0.3*between_n[i]);
+  const sorted=[...scores].sort((a,b)=>b-a);
+  const p66=sorted[Math.floor(N*0.33)]??0;
+  const p33=sorted[Math.floor(N*0.66)]??0;
+  const tiers=scores.map(s=>s>=p66?'High':s>=p33?'Medium':'Low');
+
+  return{wdeg_n,between_n,close,ev_n,scores,tiers,idx};
+}
+
+function computeAll(){
+  if(actors.length<3){alert('Add at least 3 actors.');return;}
+  if(observations.length<2){alert('Add at least 2 interactions.');return;}
+  const r=computeMetrics();lastResults=r;
+
+  // results table
+  const sorted=[...actors].map((a,i)=>({a,i})).sort((x,y)=>r.scores[y.i]-r.scores[x.i]);
+  document.getElementById('res-table').innerHTML=sorted.map(({a,i})=>`
+    <tr>
+      <td style="font-weight:500">${a.name}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${TYPE_LABELS[a.type]||a.type}</td>
+      <td class="mono">${r.wdeg_n[i].toFixed(3)}</td>
+      <td class="mono">${r.between_n[i].toFixed(3)}</td>
+      <td class="mono">${r.close[i].toFixed(3)}</td>
+      <td class="mono">${r.ev_n[i].toFixed(3)}</td>
+      <td class="mono" style="font-weight:500">${r.scores[i].toFixed(3)}</td>
+      <td>${riskBadge(r.tiers[i])}</td>
+    </tr>`).join('');
+
+  // dual-layer table
+  const DECISION={
+    'High-Unverified':{p:'RED ALERT',badge:'b-red',action:'Immediate friction, down-ranking, context injection'},
+    'High-Contested': {p:'MONITOR',badge:'b-amber',action:'Watch closely, route diversification, counter-signals'},
+    'High-Verified':  {p:'POSITIVE SIGNAL',badge:'b-green',action:'No intervention — network working correctly'},
+    'High-Satire':    {p:'CONTEXT LABEL',badge:'b-neutral',action:'Context labeling only'},
+    'High-Procedural':{p:'ROUTINE',badge:'b-neutral',action:'Standard verification protocols'},
+    'Medium-Unverified':{p:'WATCH',badge:'b-amber',action:'Monitor, light friction'},
+    'Medium-Contested': {p:'WATCH',badge:'b-amber',action:'Monitor for escalation'},
+    'Medium-Verified':  {p:'NEUTRAL',badge:'b-neutral',action:'No action required'},
+    'Low-default':      {p:'NEUTRAL',badge:'b-neutral',action:'No action required'},
+  };
+  document.getElementById('dual-table').innerHTML=sorted.map(({a,i})=>{
+    const key=r.tiers[i]+'-'+a.content;
+    const d=DECISION[key]||DECISION[r.tiers[i]+'-default']||DECISION['Low-default'];
+    return`<tr>
+      <td style="font-weight:500">${a.name}</td>
+      <td>${riskBadge(r.tiers[i])}</td>
+      <td>${contentBadge(a.content)}</td>
+      <td><span class="badge ${d.badge}">${d.p}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${d.action}</td>
+    </tr>`;
+  }).join('');
+
+  // intervention pane
+  const alerts=sorted.filter(({a,i})=>r.tiers[i]==='High'&&(a.content==='Unverified'||a.content==='Contested'));
+  const positives=sorted.filter(({a,i})=>r.tiers[i]==='High'&&a.content==='Verified');
+  const intDiv=document.getElementById('int-alerts');
+  let html='';
+  if(alerts.length===0&&positives.length===0){
+    html='<div class="verdict-box v-neutral"><div style="font-family:var(--mono);font-size:11px;color:var(--text2)">No high-priority interventions identified. All high-risk nodes are carrying verified or neutral content.</div></div>';
+  }
+  alerts.forEach(({a,i})=>{
+    const isRed=a.content==='Unverified';
+    html+=`<div class="verdict-box ${isRed?'v-red':'v-amber'}" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="badge ${isRed?'b-red':'b-amber'}">${isRed?'RED ALERT':'MONITOR'}</span>
+        <span style="font-weight:500">${a.name}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Risk score: ${r.scores[i].toFixed(3)}</span>
+        ${contentBadge(a.content)}
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">${isRed?'Immediate friction, down-ranking, context injection required. This actor has high cascade amplification potential and is currently spreading unverified content.':'Watch closely. High structural position amplifying contested content. Route diversification and counter-signal monitoring recommended.'}</div>
+    </div>`;
+  });
+  positives.forEach(({a,i})=>{
+    html+=`<div class="verdict-box v-green" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="badge b-green">POSITIVE SIGNAL</span>
+        <span style="font-weight:500">${a.name}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Risk score: ${r.scores[i].toFixed(3)}</span>
+        ${contentBadge(a.content)}
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">High structural amplifier carrying verified content. The ecology is functioning correctly at this node. No intervention needed.</div>
+    </div>`;
+  });
+  intDiv.innerHTML=html;
+
+  // network health metrics
+  const N=actors.length;
+  const redAlerts=alerts.filter(({a})=>a.content==='Unverified').length;
+  const highNodes=sorted.filter(({_,i})=>r.tiers[i]==='High').length;
+  const avgRisk=(r.scores.reduce((a,b)=>a+b,0)/N).toFixed(3);
+  document.getElementById('int-metrics').innerHTML=`
+    <div class="metric"><div class="metric-lbl">Red alerts</div><div class="metric-val" style="color:${redAlerts>0?'var(--red)':'var(--green)'}">${redAlerts}</div><div class="metric-sub">High risk + Unverified</div></div>
+    <div class="metric"><div class="metric-lbl">High-risk nodes</div><div class="metric-val">${highNodes}</div><div class="metric-sub">Top structural tier</div></div>
+    <div class="metric"><div class="metric-lbl">Network avg risk</div><div class="metric-val">${avgRisk}</div><div class="metric-sub">Composite score mean</div></div>
+    <div class="metric"><div class="metric-lbl">Actors assessed</div><div class="metric-val">${N}</div><div class="metric-sub">Nodes in network</div></div>`;
+
+  document.getElementById('res-empty').style.display='none';
+  document.getElementById('res-content').style.display='block';
+  document.getElementById('int-empty').style.display='none';
+  document.getElementById('int-content').style.display='block';
+  showPane('results');
+}
+
+// ── GRAPH ─────────────────────────────────────────────────────────────────────
+function drawGraph(){
+  if(!actors.length) return;
+  const svg=document.getElementById('graph-svg');
+  const W=svg.clientWidth||700,H=380;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.style.height=H+'px';
+  svg.innerHTML='';
+  const metrics=lastResults||computeMetrics();
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');svg.appendChild(g);
+  const nd=actors.map((a,i)=>({...a,ev:metrics.ev_n[i],tier:metrics.tiers[i],score:metrics.scores[i]}));
+  const ed=observations.map(o=>({source:o.from,target:o.to,w:o.rawWeight}));
+  const TIER_COL={High:'#c45c5c',Medium:'#c49a3c',Low:'#1D9E75'};
+  const sim=d3.forceSimulation(nd)
+    .force('link',d3.forceLink(ed).id(d=>d.id).distance(d=>70+30*(1/(d.w||1))).strength(0.6))
+    .force('charge',d3.forceManyBody().strength(-180))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collision',d3.forceCollide(22));
+  simulation=sim;
+  const isDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  const les=ed.map(d=>{
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('stroke',isDark?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.10)');
+    line.setAttribute('stroke-width',Math.max(0.8,(d.w||1)*0.4));
+    g.appendChild(line);return{el:line,d};
+  });
+  const nes=nd.map(d=>{
+    const gr=document.createElementNS('http://www.w3.org/2000/svg','g');gr.style.cursor='grab';
+    const r=7+d.ev*14;
+    const col=TIER_COL[d.tier]||'#888';
+    const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('r',r);circ.setAttribute('fill',col);circ.setAttribute('opacity','0.85');
+    const isRedAlert=d.tier==='High'&&(d.content==='Unverified'||d.content==='Contested');
+    if(isRedAlert){circ.setAttribute('stroke','#E24B4A');circ.setAttribute('stroke-width','2.5');}
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('text-anchor','middle');txt.setAttribute('font-size','9');
+    txt.setAttribute('font-family','IBM Plex Mono, monospace');
+    txt.setAttribute('fill',isDark?'rgba(232,230,223,0.85)':'rgba(26,25,22,0.75)');
+    txt.setAttribute('dy',r+10);
+    txt.textContent=d.name.split(' ').slice(0,2).join(' ')+(d.name.split(' ').length>2?'…':'');
+    const tip=document.createElementNS('http://www.w3.org/2000/svg','title');
+    tip.textContent=`${d.name}\nType: ${TYPE_LABELS[d.type]||d.type}\nContent: ${d.content}\nRisk tier: ${d.tier}\nRisk score: ${d.score.toFixed(3)}\nEigenvector: ${d.ev.toFixed(3)}`;
+    gr.appendChild(circ);gr.appendChild(txt);gr.appendChild(tip);g.appendChild(gr);
+    d3.select(gr).call(d3.drag()
+      .on('start',ev=>{if(!ev.active) sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;gr.style.cursor='grabbing';})
+      .on('drag',ev=>{d.fx=ev.x;d.fy=ev.y;})
+      .on('end',ev=>{if(!ev.active) sim.alphaTarget(0);d.fx=null;d.fy=null;gr.style.cursor='grab';})
+    );
+    return{el:gr,d};
+  });
+  sim.on('tick',()=>{
+    les.forEach(({el,d})=>{
+      const s=nd.find(n=>n.id===d.source.id||n===d.source);
+      const t=nd.find(n=>n.id===d.target.id||n===d.target);
+      if(s&&t){el.setAttribute('x1',s.x);el.setAttribute('y1',s.y);el.setAttribute('x2',t.x);el.setAttribute('y2',t.y);}
+    });
+    nes.forEach(({el,d})=>{if(d.x!=null) el.setAttribute('transform',`translate(${d.x},${d.y})`);});
+  });
+}
+function restartSim(){if(simulation) simulation.alpha(1).restart();}
+</script>
+</body>
+</html>
