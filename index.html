@@ -116,9 +116,9 @@ td.mono{font-family:var(--mono);font-size:11px}
 
 <div class="topbar">
   <div>
-    <div class="brand">Online Journalism Review · Supplementary Calculator</div>
+    <div class="brand">Supplementary Calculator · Network Ecology of Information</div>
     <div class="title">Network Ecology of Information — Risk Calculator</div>
-    <div class="subtitle">Enter your observed media network interactions and content verification status to compute structural risk scores and dual-layer intervention recommendations. Implements the 5-Dimensional Risk Assessment Model exactly as specified in the paper.</div>
+    <div class="subtitle">Enter your observed media network interactions and content verification status to compute structural screening scores and dual-layer intervention recommendations. Implements the structural screening score and two-layer decision matrix specified in the paper.</div>
   </div>
   <div class="links">
     <a href="https://osf.io/f5trp/" target="_blank">OSF Archive</a>
@@ -261,15 +261,15 @@ td.mono{font-family:var(--mono);font-size:11px}
     <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green-mid);display:inline-block"></span>Low risk</span>
   </div>
   <div class="graph-wrap"><svg id="graph-svg"></svg></div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:6px">Compute risk scores first to enable centrality-weighted node sizing. Red outline = Critical-priority node (Critical/High structural risk + Unverified content).</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:6px">Compute risk scores first to enable centrality-weighted node sizing. Red outline = Critical-priority node (Critical/High structural prominence + Unverified content).</div>
 </div>
 
 <!-- RESULTS PANE -->
 <div class="pane" id="pane-results">
   <div id="res-empty" style="padding:3rem 0;font-family:var(--mono);font-size:11px;color:var(--text3)">Enter network data and compute risk scores to see results.</div>
   <div id="res-content" style="display:none">
-    <div class="section-head">Structural risk scores — Layer 1 (content-neutral)</div>
-    <div class="formula">Centrality Risk = 0.25 × Degree + 0.35 × Betweenness + 0.20 × Closeness + 0.20 × Eigenvector</div>
+    <div class="section-head">Structural prominence scores — Layer 1 (content-neutral)</div>
+    <div class="formula">Structural Screening Score = 0.25 × Degree + 0.35 × Betweenness + 0.20 × Closeness + 0.20 × Eigenvector</div>
     <div class="card" style="padding:0;overflow-x:auto;margin-bottom:1.5rem">
       <table>
         <thead><tr>
@@ -280,11 +280,11 @@ td.mono{font-family:var(--mono);font-size:11px}
       </table>
     </div>
 
-    <div class="section-head">Dual-layer assessment — Layer 2 (structural risk × content status)</div>
+    <div class="section-head">Dual-layer assessment — Layer 2 (structural prominence × content status)</div>
     <div class="card" style="padding:0;overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Actor</th><th>Structural risk</th><th>Content status</th>
+          <th>Actor</th><th>Structural tier</th><th>Content status</th>
           <th>Intervention priority</th><th>Recommended action</th>
         </tr></thead>
         <tbody id="dual-table"></tbody>
@@ -303,9 +303,9 @@ td.mono{font-family:var(--mono);font-size:11px}
     <div class="g4" id="int-metrics"></div>
     <div class="section-head" style="margin-top:1.5rem">The dual-layer principle</div>
     <div class="card-flat" style="font-size:12px;color:var(--text2);line-height:1.7">
-      <strong style="color:var(--text)">High amplification of verified content = positive signal.</strong> The network is functioning correctly. No intervention needed even if structural risk is high.<br><br>
+      <strong style="color:var(--text)">High amplification of verified content = positive signal.</strong> Under the decision matrix, verified content receives no additional review priority even when structural prominence is high.<br><br>
       <strong style="color:var(--text)">High amplification of unverified content = cascade risk.</strong> The same structurally powerful node is the problem. Immediate friction, down-ranking, context injection.<br><br>
-      Structural risk tier and content status are computed independently. Their intersection — not any single metric — determines intervention priority. This preserves analytical neutrality: risk tiers make no claims about actor intent, content accuracy, or political orientation.
+      Structural tier and content status are computed independently. Their intersection — not any single metric — determines intervention priority. This preserves analytical neutrality: risk tiers make no claims about actor intent, content accuracy, or political orientation.
     </div>
   </div>
 </div>
@@ -314,7 +314,7 @@ td.mono{font-family:var(--mono);font-size:11px}
 <div class="pane" id="pane-methodology">
   <div class="card-flat" style="margin-bottom:1.5rem;font-size:12px;color:var(--text2);line-height:1.7;border-left:2px solid var(--blue)">
     <strong style="color:var(--text);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em">Implementation note — edge weights</strong><br>
-    This calculator uses <span style="font-family:var(--mono);font-size:11px">rawWeight = interaction_type_weight × count</span> — capturing both the type of interaction (mention=1 through hyperlink=4) and its observed frequency. This is the richer implementation for real-world media networks where a single actor may retweet another 50 times. All four centrality measures are max-normalized within the network snapshot before entering the composite Centrality Risk score, so results computed here match the paper's Table 3 exactly. The risk formula, centrality measures, content verification categories, and decision matrix are implemented exactly as specified in the paper.
+    This calculator uses <span style="font-family:var(--mono);font-size:11px">rawWeight = interaction_type_weight × count</span> — capturing both the type of interaction (mention=1 through hyperlink=4) and its observed frequency. This is the richer implementation for real-world media networks where a single actor may retweet another 50 times. All four centrality measures are max-normalized within the network snapshot before entering the composite structural screening score score, so results computed here match the paper's Table 3 exactly. The risk formula, centrality measures, content verification categories, and decision matrix are implemented exactly as specified in the paper.
   </div>
   <div class="section-head">Interaction weights (Section 3)</div>
   <div class="card" style="padding:0;overflow-x:auto;margin-bottom:1.5rem">
@@ -332,7 +332,7 @@ td.mono{font-family:var(--mono);font-size:11px}
   <div class="section-head">Centrality measures (Section 4)</div>
   <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
     <div class="card-flat">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Weighted degree centrality — superspreader potential</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.06em">Weighted degree centrality — amplification volume</div>
       <div class="formula">C_D(v) = Σ w_vu / (N − 1)</div>
       <div style="font-size:11px;color:var(--text2)">Raw amplification capacity. Most sensitive to friction-based interventions. Separates broadcast hubs from local amplifiers.</div>
     </div>
@@ -358,7 +358,7 @@ td.mono{font-family:var(--mono);font-size:11px}
     <table>
       <thead><tr><th>Category</th><th>Definition</th><th>Intervention implication</th></tr></thead>
       <tbody>
-        <tr><td><span class="badge b-green">Verified</span></td><td style="font-size:11px;color:var(--text2)">Independently confirmed by two or more credible sources</td><td style="font-size:11px;color:var(--text2)">No intervention needed — network functioning correctly</td></tr>
+        <tr><td><span class="badge b-green">Verified</span></td><td style="font-size:11px;color:var(--text2)">Independently confirmed by two or more credible sources</td><td style="font-size:11px;color:var(--text2)">No additional review priority</td></tr>
         <tr><td><span class="badge b-amber">Contested</span></td><td style="font-size:11px;color:var(--text2)">Active factual dispute among credible sources</td><td style="font-size:11px;color:var(--text2)">Monitor — watch for cascade amplification</td></tr>
         <tr><td><span class="badge b-red">Unverified</span></td><td style="font-size:11px;color:var(--text2)">Single source, no independent confirmation yet</td><td style="font-size:11px;color:var(--text2)">High priority — apply friction and context injection</td></tr>
         <tr><td><span class="badge b-neutral">Satire</span></td><td style="font-size:11px;color:var(--text2)">Clearly labeled opinion or satirical content</td><td style="font-size:11px;color:var(--text2)">Context labeling only</td></tr>
@@ -370,26 +370,24 @@ td.mono{font-family:var(--mono);font-size:11px}
   <div class="section-head">Decision matrix (Section 8)</div>
   <div class="card" style="padding:0;overflow-x:auto">
     <table>
-      <thead><tr><th>Structural risk</th><th>Content status</th><th>Priority</th><th>Action</th></tr></thead>
+      <thead><tr><th>Structural tier</th><th>Content status</th><th>Priority</th><th>Action</th></tr></thead>
       <tbody>
         <tr><td><span class="badge b-critical">Critical</span></td><td><span class="badge b-red">Unverified</span></td><td><span class="badge b-critical">CRITICAL</span></td><td style="font-size:11px;color:var(--text2)">Immediate friction, down-ranking, context injection</td></tr>
         <tr><td><span class="badge b-critical">Critical</span></td><td><span class="badge b-amber">Contested</span></td><td><span class="badge b-red">URGENT</span></td><td style="font-size:11px;color:var(--text2)">Immediate monitoring, route diversification</td></tr>
         <tr><td><span class="badge b-red">High</span></td><td><span class="badge b-red">Unverified</span></td><td><span class="badge b-red">HIGH</span></td><td style="font-size:11px;color:var(--text2)">Prioritized friction and context injection</td></tr>
         <tr><td><span class="badge b-red">High</span></td><td><span class="badge b-amber">Contested</span></td><td><span class="badge b-amber">ELEVATED WATCH</span></td><td style="font-size:11px;color:var(--text2)">Prioritized monitoring</td></tr>
-        <tr><td>Any</td><td><span class="badge b-green">Verified</span></td><td><span class="badge b-green">POSITIVE SIGNAL</span></td><td style="font-size:11px;color:var(--text2)">No intervention — network functioning correctly</td></tr>
+        <tr><td>Any</td><td><span class="badge b-green">Verified</span></td><td><span class="badge b-green">POSITIVE SIGNAL</span></td><td style="font-size:11px;color:var(--text2)">No additional review priority</td></tr>
+        <tr><td>Any</td><td><span class="badge b-neutral">Satire</span></td><td><span class="badge b-neutral">CONTEXT LABEL</span></td><td style="font-size:11px;color:var(--text2)">Context labeling only</td></tr>
+        <tr><td>Any</td><td><span class="badge b-blue">Procedural</span></td><td><span class="badge b-neutral">ROUTINE</span></td><td style="font-size:11px;color:var(--text2)">Standard verification protocols</td></tr>
         <tr><td><span class="badge b-amber">Medium</span></td><td><span class="badge b-red">Unverified</span></td><td><span class="badge b-amber">WATCH</span></td><td style="font-size:11px;color:var(--text2)">Monitor, light friction</td></tr>
-        <tr><td><span class="badge b-green">Low</span></td><td>Any</td><td><span class="badge b-neutral">NEUTRAL</span></td><td style="font-size:11px;color:var(--text2)">No action required</td></tr>
+        <tr><td><span class="badge b-amber">Medium</span></td><td><span class="badge b-amber">Contested</span></td><td><span class="badge b-amber">WATCH</span></td><td style="font-size:11px;color:var(--text2)">Monitor</td></tr>
+        <tr><td><span class="badge b-green">Low</span></td><td>Unverified or Contested</td><td><span class="badge b-neutral">NEUTRAL</span></td><td style="font-size:11px;color:var(--text2)">No action required</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
 </div><!-- /main -->
-
-<div class="footer">
-  <span></span>
-  <span>OSF: <a href="https://osf.io/f5trp/" target="_blank">osf.io/f5trp</a> &nbsp;·&nbsp; Figures: <a href="https://zoomyremy1033-web.github.io/network-ecology-figures/" target="_blank">github.io</a> &nbsp;·&nbsp; D3.js v7</span>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script>
@@ -651,20 +649,25 @@ function computeMetrics(){
   });
 
   // eigenvector
+  // Shifted power iteration on (A + I): same dominant eigenvector as A, but converges
+  // on bipartite graphs (e.g. trees/stars), where plain power iteration oscillates.
   let ev=new Array(N).fill(1/N);
-  for(let it=0;it<60;it++){
-    const nev=new Array(N).fill(0);
+  for(let it=0;it<5000;it++){
+    const nev=ev.slice();
     observations.forEach(o=>{
       const i=idx[o.from],j=idx[o.to];
       if(i!=null&&j!=null){nev[i]+=o.rawWeight*ev[j];nev[j]+=o.rawWeight*ev[i];}
     });
     const norm=Math.sqrt(nev.reduce((a,b)=>a+b*b,0))||1;
-    ev=nev.map(x=>x/norm);
+    const nx=nev.map(x=>x/norm);
+    const diff=Math.max(...nx.map((x,k)=>Math.abs(x-ev[k])));
+    ev=nx;
+    if(diff<1e-12)break;
   }
   const ev_max=Math.max(...ev)||1;
   const ev_n=ev.map(x=>x/ev_max);
 
-  // risk scores — Centrality Risk = 0.25(Degree) + 0.35(Betweenness) + 0.20(Closeness) + 0.20(Eigenvector)
+  // risk scores — Structural Screening Score = 0.25(Degree) + 0.35(Betweenness) + 0.20(Closeness) + 0.20(Eigenvector)
   const scores=actors.map((_,i)=>0.25*wdeg_n[i]+0.35*between_n[i]+0.20*close[i]+0.20*ev_n[i]);
   const tiers=scores.map(s=>s>=0.85?'Critical':s>=0.65?'High':s>=0.35?'Medium':'Low');
 
@@ -692,7 +695,7 @@ function computeAll(){
 
   // dual-layer table — matches Table 6's decision matrix exactly
   function getDecision(tier, content){
-    if(content==='Verified') return {p:'POSITIVE SIGNAL',badge:'b-green',action:'No intervention — network functioning correctly'};
+    if(content==='Verified') return {p:'POSITIVE SIGNAL',badge:'b-green',action:'No additional review priority'};
     if(content==='Satire') return {p:'CONTEXT LABEL',badge:'b-neutral',action:'Context labeling only'};
     if(content==='Procedural') return {p:'ROUTINE',badge:'b-neutral',action:'Standard verification protocols'};
     if(tier==='Low') return {p:'NEUTRAL',badge:'b-neutral',action:'No action required'};
@@ -701,6 +704,7 @@ function computeAll(){
     if(tier==='High'&&content==='Unverified') return {p:'HIGH',badge:'b-red',action:'Prioritized friction and context injection'};
     if(tier==='High'&&content==='Contested') return {p:'ELEVATED WATCH',badge:'b-amber',action:'Prioritized monitoring'};
     if(tier==='Medium'&&content==='Unverified') return {p:'WATCH',badge:'b-amber',action:'Monitor, light friction'};
+    if(tier==='Medium'&&content==='Contested') return {p:'WATCH',badge:'b-amber',action:'Monitor'};
     return {p:'NEUTRAL',badge:'b-neutral',action:'No action required'};
   }
   document.getElementById('dual-table').innerHTML=sorted.map(({a,i})=>{
@@ -743,7 +747,7 @@ function computeAll(){
         <span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Risk score: ${r.scores[i].toFixed(3)}</span>
         ${contentBadge(a.content)}
       </div>
-      <div style="font-size:12px;color:var(--text2);margin-top:6px">High structural amplifier carrying verified content. The ecology is functioning correctly at this node. No intervention needed.</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">High structural prominence carrying verified content. Under the decision matrix this node receives no additional review priority.</div>
     </div>`;
   });
   intDiv.innerHTML=html;
